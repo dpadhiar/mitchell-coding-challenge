@@ -27,7 +27,7 @@ public class VehicleControllerTest {
     private int port;
 
     private String getRootUrl() {
-        return "http://localhost:" + port;
+        return "http://localhost:" + port + "/api/v1";
     }
 
     @Before
@@ -42,7 +42,7 @@ public class VehicleControllerTest {
         for(int i = 0; i < vecID.length; i++) {
             Vehicle vec = new Vehicle(vecID[i], vecYear[i], vecMake[i], vecModel[i]);
             System.out.println(vec.getModel());
-            restTemplate.postForEntity(getRootUrl() + "/vehicle", vec, Vehicle.class);
+            restTemplate.postForEntity(getRootUrl() + "/vehicle", vec, String.class);
         }
     }
 
@@ -59,15 +59,17 @@ public class VehicleControllerTest {
     public void TestGetVehicleByID() {
         Vehicle testVec = restTemplate.getForObject(getRootUrl() + "/vehicle/11114", Vehicle.class);
         assertNotNull(testVec);
-        Vehicle vec = restTemplate.getForObject(getRootUrl() + "/vehicle/11114", Vehicle.class);
-        System.out.println(vec.getMake());
+        assertEquals((long) testVec.getId(), (long) 11114);
+        assertEquals((long) testVec.getYear(), (long) 2020);
+        assertEquals(testVec.getMake(), "Nissan");
+        assertEquals(testVec.getModel(), "Rogue");
     }
 
     @Test
     public void TestCreateVehicle() {
         Vehicle newVec = new Vehicle(11119, 2014, "Audi", "A7");
-        ResponseEntity<Vehicle> postResponse = restTemplate.postForEntity(getRootUrl() + "/vehicle",
-                newVec, Vehicle.class);
+        ResponseEntity<String> postResponse = restTemplate.postForEntity(getRootUrl() + "/vehicle",
+                newVec, String.class);
         assertNotNull(postResponse);
         assertNotNull(postResponse.getBody());
     }
@@ -79,13 +81,12 @@ public class VehicleControllerTest {
         vec.setMake("Mazda");
         vec.setModel("Miata");
         vec.setYear(2017);
-        restTemplate.put(getRootUrl() + "/vehicle/" + vecToUpdateID, Vehicle.class);
+        restTemplate.put(getRootUrl() + "/vehicle/" + vecToUpdateID, vec);
         Vehicle updatedVec = restTemplate.getForObject(getRootUrl() + "/vehicle/" + vecToUpdateID, Vehicle.class);
-        assertNotNull(updatedVec);
-        /* assertEquals((long) updatedVec.getId(), (long) 11115);
+        assertEquals((long) updatedVec.getId(), (long) 11115);
         assertEquals((long) updatedVec.getYear(), (long) 2017);
         assertEquals(updatedVec.getMake(), "Mazda");
-        assertEquals(updatedVec.getModel(), "Miata"); */
+        assertEquals(updatedVec.getModel(), "Miata");
     }
 
     @Test
