@@ -1,0 +1,103 @@
+package com.example.vehicle;
+
+import com.example.vehicle.api.VehicleController;
+import com.example.vehicle.model.Vehicle;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.http.*;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.client.HttpClientErrorException;
+
+import static org.junit.Assert.*;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = VehicleApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class VehicleControllerTest {
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    @LocalServerPort
+    private int port;
+
+    private String getRootUrl() {
+        return "http://localhost:" + port;
+    }
+
+    @Before
+    public void Before() {
+
+        int[] vecID = {11111, 11112, 11113, 11114, 11115, 11116, 11117, 11118};
+        int[] vecYear = {1998, 2004, 2018, 2020, 2006, 1983, 2015, 2019};
+        String[] vecMake = {"Toyota", "Honda", "Tesla", "Nissan", "Volkswagen",
+                "BMW", "Chevrolet", "Ford"};
+        String[] vecModel = {"Corolla", "Civic", "Model S", "Rogue", "Jetta",
+                "315i", "Silverado", "F-150"};
+        for(int i = 0; i < vecID.length; i++) {
+            Vehicle vec = new Vehicle(vecID[i], vecYear[i], vecMake[i], vecModel[i]);
+            System.out.println(vec.getModel());
+            restTemplate.postForEntity(getRootUrl() + "/vehicle", vec, Vehicle.class);
+        }
+    }
+
+    @Test
+    public void TestGetAllVehicles() {
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<String> entity = new HttpEntity<>(null,headers);
+        ResponseEntity<String> response = restTemplate.exchange(getRootUrl() + "/vehicle",
+                HttpMethod.GET, entity, String.class);
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    public void TestGetVehicleByID() {
+        Vehicle testVec = restTemplate.getForObject(getRootUrl() + "/vehicle/11114", Vehicle.class);
+        assertNotNull(testVec);
+        Vehicle vec = restTemplate.getForObject(getRootUrl() + "/vehicle/11114", Vehicle.class);
+        System.out.println(vec.getMake());
+    }
+
+    @Test
+    public void TestCreateVehicle() {
+        Vehicle newVec = new Vehicle(11119, 2014, "Audi", "A7");
+        ResponseEntity<Vehicle> postResponse = restTemplate.postForEntity(getRootUrl() + "/vehicle",
+                newVec, Vehicle.class);
+        assertNotNull(postResponse);
+        assertNotNull(postResponse.getBody());
+    }
+
+    @Test
+    public void TestUpdateVehicle() {
+        int vecToUpdateID = 11115;
+        Vehicle vec = restTemplate.getForObject(getRootUrl() + "/vehicle/" + vecToUpdateID, Vehicle.class);
+        vec.setMake("Mazda");
+        vec.setModel("Miata");
+        vec.setYear(2017);
+        restTemplate.put(getRootUrl() + "/vehicle/" + vecToUpdateID, Vehicle.class);
+        Vehicle updatedVec = restTemplate.getForObject(getRootUrl() + "/vehicle/" + vecToUpdateID, Vehicle.class);
+        assertNotNull(updatedVec);
+        /* assertEquals((long) updatedVec.getId(), (long) 11115);
+        assertEquals((long) updatedVec.getYear(), (long) 2017);
+        assertEquals(updatedVec.getMake(), "Mazda");
+        assertEquals(updatedVec.getModel(), "Miata"); */
+    }
+
+    @Test
+    public void TestDeleteVehicle() {
+        int vecToDeleteID = 11118;
+        Vehicle vec = restTemplate.getForObject(getRootUrl() + "/vehicle/" + vecToDeleteID, Vehicle.class);
+        assertNotNull(vec);
+        restTemplate.delete(getRootUrl() + "/vehicle/" + vecToDeleteID, Vehicle.class);
+        try {
+            vec = restTemplate.getForObject(getRootUrl() + "/vehicle/" + vecToDeleteID, Vehicle.class);
+        } catch (final HttpClientErrorException e) {
+            assertEquals(e.getStatusCode(), HttpStatus.NOT_FOUND);
+        }
+    }
+}
