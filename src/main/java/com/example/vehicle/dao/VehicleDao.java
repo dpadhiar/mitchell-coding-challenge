@@ -5,7 +5,13 @@ import com.example.vehicle.model.Vehicle;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Abstract class containing all CRUD methods to be implemented.
+ *
+ * @author dillenpadhiar
+ */
 public interface VehicleDao {
+
 
     int insertVehicle(Vehicle vehicle);
 

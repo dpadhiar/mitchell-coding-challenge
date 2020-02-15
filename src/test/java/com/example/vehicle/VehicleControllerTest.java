@@ -1,10 +1,8 @@
 package com.example.vehicle;
 
-import com.example.vehicle.api.VehicleController;
 import com.example.vehicle.model.Vehicle;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,20 +14,34 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import static org.junit.Assert.*;
 
+/**
+ * Tester class to check functionality of service.
+ *
+ * @author dillenpadhiar
+ */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = VehicleApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class VehicleControllerTest {
 
+    // restTemplate to model service and send requests
     @Autowired
     private TestRestTemplate restTemplate;
 
     @LocalServerPort
     private int port;
 
+    /**
+     * Generates port to test service on.
+     *
+     * @return string of location to send requests
+     */
     private String getRootUrl() {
         return "http://localhost:" + port + "/api/v1";
     }
 
+    /**
+     * Sets up database before each test is run.
+     */
     @Before
     public void Before() {
 
@@ -41,11 +53,13 @@ public class VehicleControllerTest {
                 "315i", "Silverado", "F-150"};
         for(int i = 0; i < vecID.length; i++) {
             Vehicle vec = new Vehicle(vecID[i], vecYear[i], vecMake[i], vecModel[i]);
-            System.out.println(vec.getModel());
             restTemplate.postForEntity(getRootUrl() + "/vehicle", vec, String.class);
         }
     }
 
+    /**
+     * Checks that get request for all vehicles returns objects and is not null.
+     */
     @Test
     public void TestGetAllVehicles() {
         HttpHeaders headers = new HttpHeaders();
@@ -55,6 +69,9 @@ public class VehicleControllerTest {
         assertNotNull(response.getBody());
     }
 
+    /**
+     * Checks that specific vehicle is returned by get request.
+     */
     @Test
     public void TestGetVehicleByID() {
         Vehicle testVec = restTemplate.getForObject(getRootUrl() + "/vehicle/11114", Vehicle.class);
@@ -65,6 +82,9 @@ public class VehicleControllerTest {
         assertEquals(testVec.getModel(), "Rogue");
     }
 
+    /**
+     * Checks that post requests to create vehicles are functioning as intended.
+     */
     @Test
     public void TestCreateVehicle() {
         Vehicle newVec = new Vehicle(11119, 2014, "Audi", "A7");
@@ -74,6 +94,9 @@ public class VehicleControllerTest {
         assertNotNull(postResponse.getBody());
     }
 
+    /**
+     * Checks that put requests to update vehicles are functioning as intended.
+     */
     @Test
     public void TestUpdateVehicle() {
         int vecToUpdateID = 11115;
@@ -89,6 +112,9 @@ public class VehicleControllerTest {
         assertEquals(updatedVec.getModel(), "Miata");
     }
 
+    /**
+     * Checks that delete requests to remove vehicles are functioning as intended.
+     */
     @Test
     public void TestDeleteVehicle() {
         int vecToDeleteID = 11118;
